@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Caixa - Vendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Escola Financeiro</a>
+      <div class="navbar-nav">
+        <a class="nav-link" href="admin.html">Cadastrar Aluno</a>
+        <a class="nav-link" href="caixa.html">Caixa/Vendas</a>
+        <button class="btn btn-outline-light btn-sm ms-3" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </nav>
+  
+  <script>
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+<body class="container py-4 text-center">
+    <h3>Terminal de Cobrança</h3>
+    <div id="reader" style="width: 300px; margin: auto;" class="mb-4"></div>
+    
+    <div id="areaVenda" class="card p-3 shadow mx-auto" style="max-width: 400px; display: none;">
+        <h4 id="nomeDisplay"></h4>
+        <h5 class="text-primary">Saldo: R$ <span id="saldoDisplay"></span></h5>
+        <input type="number" id="valorVenda" class="form-control my-3" placeholder="Valor da venda R$">
+        <button onclick="cobrar()" class="btn btn-danger w-100">Confirmar Pagamento</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = { /* SEU CONFIG AQUI */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let alunoId = "";
+
+        function onScanSuccess(decodedText) {
+            const url = new URL(decodedText);
+            alunoId = url.searchParams.get("id");
+            db.collection("alunos").doc(alunoId).get().then(doc => {
+                document.getElementById('nomeDisplay').innerText = doc.data().nome;
+                document.getElementById('saldoDisplay').innerText = doc.data().saldo.toFixed(2);
+                document.getElementById('areaVenda').style.display = "block";
+            });
+        }
+
+        async function cobrar() {
+            const valor = parseFloat(document.getElementById('valorVenda').value);
+            const ref = db.collection("alunos").doc(alunoId);
+            
+            await ref.update({ saldo: firebase.firestore.FieldValue.increment(-valor) });
+            await db.collection("historico").add({ id: alunoId, valor, data: new Date() });
+            
+            alert("Pago com sucesso!");
+            location.reload();
+        }
+
+        let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        scanner.render(onScanSuccess);
+    </script>
+</body>
+</html>

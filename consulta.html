@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Saldo Escolar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center" style="height: 100vh;">
+    <div class="card p-4 shadow text-center" style="width: 90%; max-width: 350px;">
+        <h2 id="nomeAluno" class="h4">Carregando...</h2>
+        <hr>
+        <p class="mb-1 text-muted">Saldo disponível:</p>
+        <h1 class="text-success fw-bold">R$ <span id="saldoAluno">0,00</span></h1>
+        <div class="mt-4 p-2 bg-white border rounded small text-muted">
+            Mantenha seu QR Code seguro. Em caso de perda, avise a secretaria.
+        </div>
+    </div>
+    <div class="mt-5 p-3 bg-white rounded shadow-sm text-start" style="font-size: 0.85rem; color: #666;">
+        <h6 class="text-dark fw-bold">Regras de Uso:</h6>
+        <ul class="list-unstyled">
+            <li>• Este QR Code é o seu documento financeiro na escola.</li>
+            <li>• Mantenha o seu código em segurança.</li>
+            <li>• Em caso de perda, solicite o bloqueio na secretaria.</li>
+            <li>• O saldo é atualizado instantaneamente após cada operação.</li>
+        </ul>
+        <p class="text-center mt-2 mb-0"><em>Escola Modelo - 2026</em></p>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = { /* SEU CONFIG AQUI */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        if(id) {
+            db.collection("alunos").doc(id).onSnapshot(doc => {
+                if(doc.exists) {
+                    document.getElementById('nomeAluno').innerText = doc.data().nome;
+                    document.getElementById('saldoAluno').innerText = doc.data().saldo.toFixed(2);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
